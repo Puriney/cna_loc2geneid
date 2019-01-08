@@ -1,0 +1,10 @@
+
+# Input
+cna_input: '/volumes/lab/users/yyan7/project/map_g_and_t/data/MDA-MB-436/dna/uber.MDAMB436.seg.txt'
+# Output
+cna_output: '/volumes/lab/users/yyan7/project/map_g_and_t/media/MDA-MB-436/dna/uber.MDAMB436.seg.gene_based.txt'
+
+# Refs
+genomic_loc_by_varbin: '/volumes/seq/code/PIPELINES/CNA_pipeline_v1.3/lib/varbin.gc.content.200k.bowtie.k50.hg19.bin_not_removed.txt'
+genomic_loc_by_geneid: '/volumes/lab/users/yyan7/project/cna_loc2geneid/lib/hg19_geneid.txt'
+
