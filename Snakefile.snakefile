@@ -137,13 +137,16 @@ rule _cna_loc2geneid:
                 k_query = '{}\t{}\t{}'.format(chrn, s, e)
                 dict_varbin_cna.setdefault(k_query, vals)
 
-        fh_out.write('GENE_ID\tGENE_NAME\t{}\n'.format('\t'.join(names_screens)))
+        fh_out.write(
+            'chrom\tstart\tend\tGENE_ID\tGENE_NAME\tstrand\t{}\n'.format(
+                '\t'.join(names_screens)))
 
         with open(input.gid_varbin, 'r') as fh_in:
             for line in fh_in:
-                g_chrn, g_s, g_e, gid, gname, gstrd, varbin= line.strip().split('\t', 6)
+                g_chrn, g_s, g_e, gid, gname, gstrd, varbin = line.strip().split('\t', 6)
                 k_query = varbin
                 v_query = dict_varbin_cna.get(k_query, default_vals)
-                fh_out.write('{}\t{}\t{}\n'.format(gid, gname, v_query))
+                fh_out.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                    g_chrn, g_s, g_e, gid, gname, gstrd, v_query))
         fh_out.close()
 
