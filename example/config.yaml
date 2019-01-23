@@ -1,10 +1,11 @@
 
 # Input
-cna_input: ''
+cna_input: '/a/b/c.txt'
 # Output
-cna_output: ''
+cna_output: '/a/b/c.txt'
 
 # Refs
-genomic_loc_by_varbin: ''
-genomic_loc_by_geneid: ''
+genomic_loc_by_varbin: '/a/b/c.txt'
+genomic_loc_by_geneid: '/a/b/c.txt'
 
+species: 'human'
