@@ -50,10 +50,12 @@ rule _varbin_loc_mixto0_based:
     input:
         txt = fpath_genomic_loc_by_varbin,
     output:
+        unsorted_bed = temp(
+            join('lib', basename(fpath_genomic_loc_by_varbin) + '.unsorted')),
         bed = join('lib', basename(fpath_genomic_loc_by_varbin) + '.bed3'),
     run:
         fh_in = open(input.txt, 'r')
-        fh_out = open(output.bed, 'w+')
+        fh_out = open(output.unsorted_bed, 'w+')
         next(fh_in)  # remove header
         for fin in fh_in:
             chrn, s0, e1, _ = fin.strip().split('\t', 3)
@@ -64,6 +66,7 @@ rule _varbin_loc_mixto0_based:
             fh_out.write('{}\t{}\t{}\n'.format(chrn, s0, e0))
         fh_in.close()
         fh_out.close()
+        shell('sort-bed {output.unsorted_bed} > {output.bed} ')
 
 # Merge varbin with the CNA matrix
 # shared key = varbin's chr + end = CNA's chr + chrompos
