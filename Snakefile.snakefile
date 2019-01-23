@@ -1,11 +1,18 @@
 
 from os.path import basename, dirname, join
 from os import makedirs
+import numpy as np
 
 fpath_cna_input = config['cna_input']  # 23=X, 24=Y
 fpath_cna_output = config['cna_output']
 fpath_genomic_loc_by_varbin = config['genomic_loc_by_varbin']  #[0-based, 1-based]
 fpath_genomic_loc_by_geneid = config['genomic_loc_by_geneid']  #[1-based, 1-based]
+
+def _empty_str_2_nan(x):
+    if x is None or x == '':
+        return(np.nan)
+    return(np.float(x))
+
 
 rule all:
     input:
@@ -112,7 +119,10 @@ rule _associate_geneid_to_varbin:
     run:
         cmd = 'bedmap --delim \"\\t\" --echo --echo-map '
         cmd += '{input.geneid} {input.varbin} '
-        cmd += '| grep -v {} - '.format('";"')
+        # a gene is excluded if it overlaps with >=1 varbins
+        # cmd += '| grep -v {} - '.format('";"')
+
+        # a gene is excluded if it overlaps non varbins
         cmd += '| awk {} - '.format(' \'$7!=""\' ')
         cmd += '> {output.txt} '
         shell(cmd)
@@ -124,16 +134,24 @@ rule _cna_loc2geneid:
     output:
         txt = fpath_cna_output,
     run:
+        import numpy as np
         fh_out = open(output.txt, 'w+')
 
         dict_varbin_cna = {}
-        default_vals = ''
+        default_vals = None
+        n_screens = -1
         with open(input.varbin_cna, 'r') as fh_in:
             header = next(fh_in).strip().split('\t')
             names_screens = header[4:]
-            default_vals = '\t'.join(['' for i in range(len(names_screens))])
+            n_screens = len(names_screens)
+            default_vals = np.array([np.nan for i in range(n_screens)])
             for line in fh_in:
-                chrn, s, e, abspos, vals= line.strip('\n').split('\t', 4)
+                chrn, s, e, abspos, vals_str= line.strip('\n').split('\t', 4)
+                vals_str = vals_str.strip('\n').split('\t')
+                assert len(vals_str) == n_screens, 'parsing error.'
+
+                vals = np.array(list(
+                    map(lambda c: _empty_str_2_nan(c), vals_str)))
                 k_query = '{}\t{}\t{}'.format(chrn, s, e)
                 dict_varbin_cna.setdefault(k_query, vals)
 
@@ -143,10 +161,18 @@ rule _cna_loc2geneid:
 
         with open(input.gid_varbin, 'r') as fh_in:
             for line in fh_in:
-                g_chrn, g_s, g_e, gid, gname, gstrd, varbin = line.strip().split('\t', 6)
-                k_query = varbin
-                v_query = dict_varbin_cna.get(k_query, default_vals)
+                g_chrn, g_s, g_e, gid, gname, gstrd, varbins = line.strip('\n').split('\t', 6)
+                varbins_l = varbins.strip('\n').split(';')
+                n_varbins = len(varbins_l)
+                v_varbins = np.vstack([default_vals for i in range(n_varbins)])
+                for i in range(n_varbins):
+                    k_query = varbins_l[i]
+                    v_query = dict_varbin_cna.get(k_query, default_vals)
+                    v_varbins[i, :] = v_query
+
+                v = np.array([np.nanmedian(v_varbins[:, j]) for j in range(n_screens)])
+                v_str = '\t'.join(map(str, v)).replace('nan', '')
                 fh_out.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                    g_chrn, g_s, g_e, gid, gname, gstrd, v_query))
+                    g_chrn, g_s, g_e, gid, gname, gstrd, v_str))
         fh_out.close()
 
