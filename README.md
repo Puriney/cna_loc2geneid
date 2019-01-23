@@ -74,6 +74,3 @@ Snakemake, bedops, Python-3
 
 Only human genome is supported because internally the Snakemake file explicitly
 changes the chromosome 23 and 24 to X and Y, respectively.
-
-There are genes overlapping more than one VarBins. In this case, these genes are excluded. Only those genes (gene_id) with one VarBin overlapped are taken.
-
