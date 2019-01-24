@@ -118,6 +118,7 @@ rule _associate_geneid_to_varbin:
         varbin = rules._varbin_loc_mixto0_based.output.bed,
         geneid = rules._geneid_loc_1to0_based.output.bed,
     output:
+        unsorted_txt = temp(join('lib', '{}-{}-{}.txt.unsorted'.format('associate', 'geneid', 'varbin'))),
         txt = join('lib', '{}-{}-{}.txt'.format('associate', 'geneid', 'varbin')),
     run:
         cmd = 'bedmap --delim \"\\t\" --echo --echo-map '
@@ -127,8 +128,10 @@ rule _associate_geneid_to_varbin:
 
         # a gene is excluded if it overlaps non varbins
         cmd += '| awk {} - '.format(' \'$7!=""\' ')
-        cmd += '> {output.txt} '
+        cmd += '> {output.unsorted_txt} '
         shell(cmd)
+        shell('sort -V -k1,1 -k2,2n -k3,3n {output.unsorted_txt} > {output.txt} ')
+
 
 rule _cna_loc2geneid:
     input:
@@ -178,4 +181,3 @@ rule _cna_loc2geneid:
                 fh_out.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
                     g_chrn, g_s, g_e, gid, gname, gstrd, v_str))
         fh_out.close()
-
