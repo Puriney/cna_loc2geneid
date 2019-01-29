@@ -53,6 +53,8 @@ rule _varbin_loc_mixto0_based:
         unsorted_bed = temp(
             join('lib', basename(fpath_genomic_loc_by_varbin) + '.unsorted')),
         bed = join('lib', basename(fpath_genomic_loc_by_varbin) + '.bed3'),
+        biosorted_bed = temp(
+            join('lib', basename(fpath_genomic_loc_by_varbin) + '.sorted.bed3')),
     run:
         fh_in = open(input.txt, 'r')
         fh_out = open(output.unsorted_bed, 'w+')
@@ -67,12 +69,13 @@ rule _varbin_loc_mixto0_based:
         fh_in.close()
         fh_out.close()
         shell('sort-bed {output.unsorted_bed} > {output.bed} ')
+        shell('sort -V -k1,1 -k2,2n -k3,3n {output.unsorted_bed} > {output.biosorted_bed}')
 
 # Merge varbin with the CNA matrix
 # shared key = varbin's chr + end = CNA's chr + chrompos
 rule _assign_varbin_with_cna:
     input:
-        varbin = rules._varbin_loc_mixto0_based.output.bed,
+        varbin = rules._varbin_loc_mixto0_based.output.biosorted_bed,
         cna = fpath_cna_input,
     output:
         tsv = join(
