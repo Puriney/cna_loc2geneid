@@ -72,7 +72,7 @@ rule _varbin_loc_mixto0_based:
         shell('sort -V -k1,1 -k2,2n -k3,3n {output.unsorted_bed} > {output.biosorted_bed}')
 
 # Merge varbin with the CNA matrix
-# shared key = varbin's chr + end = CNA's chr + chrompos
+# shared key = varbin's chr + start = CNA's chr + chrompos
 rule _assign_varbin_with_cna:
     input:
         varbin = rules._varbin_loc_mixto0_based.output.biosorted_bed,
@@ -109,7 +109,7 @@ rule _assign_varbin_with_cna:
         with open(input.varbin, 'r') as fl:
             for line in fl:
                 chrn, s, e = line.strip('\n').split('\t')
-                k_query = '{}\t{}'.format(chrn, e)
+                k_query = '{}\t{}'.format(chrn, s)
                 cna_query = dict_cna.get(k_query, default_varbin_valinfo)
                 abspos_query = dict_abs_pos.get(k_query, 0)
                 fh_out.write('{}\t{}\t{}\t{}\t{}\n'.format(
